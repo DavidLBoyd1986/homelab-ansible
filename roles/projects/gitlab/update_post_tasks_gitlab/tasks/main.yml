@@ -1,5 +1,11 @@
 
-- name: Restart gitlab
-  command: gitlab-ctl Restart
+
 
 # Run Post checks
+# Exit maintenance mode
+- name: Disable GitLab maintenance mode
+  command: gitlab-rails runner 'ApplicationSetting.current.update!(maintenance_mode: false)'
+  become: yes
+  become_user: root
+  register: disable_maintenance_result
+  failed_when: disable_maintenance_result.rc != 0

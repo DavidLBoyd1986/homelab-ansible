@@ -1,4 +1,22 @@
 
+# Try to download the newest version of gitlab
+- name: Download newest version of gitlab
+  ansible.builtin.apt:
+    name: gitlab
+  register: package_download
+  failed_when: package_download.rc != 0
+
+# If package download failed. Inform user they need to check upgrade path.
+- name: Failed to download newest version of gitlab
+  echo: |
+    "Gitlab Failed to update."
+    "Probably because it is too outdated and must follow a specific upgrade path"
+    "Check this website for the upgrade Path:"
+    "https://gitlab-com.gitlab.io/support/toolbox/upgrade-path/"
+  when: package_download.rc != 0
+
+# TODO - Automate the upgrade path. A huge undertaking for little gain.
+
 # try update
 - name: Update GitLab to the latest version
   command: gitlab-ctl upgrade
@@ -13,10 +31,5 @@
   register: gitlab_status
   when: update_result is failed
 
-# Exit maintenance mode
-- name: Disable GitLab maintenance mode
-  command: gitlab-rails runner 'ApplicationSetting.current.update!(maintenance_mode: false)'
-  become: yes
-  become_user: root
-  register: disable_maintenance_result
-  failed_when: disable_maintenance_result.rc != 0
+- name: Restart gitlab
+  command: gitlab-ctl Restart
