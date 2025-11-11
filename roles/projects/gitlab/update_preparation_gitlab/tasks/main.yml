@@ -1,0 +1,35 @@
+
+- name: Launch Deploy Page
+  command: gitlab-ctl deploy-page up
+
+- name: Enable GitLab maintenance mode
+  command: gitlab-rails runner 'ApplicationSetting.current.update!(maintenance_mode: true, maintenance_mode_message: "GitLab is undergoing maintenance. Please try again later.")'
+  become: yes
+  become_user: root
+  register: maintenance_result
+  failed_when: maintenance_result.rc != 0
+
+- name: Create a back up of GitLab
+  command: gitlab-backup create
+  become: yes
+  become_user: root
+  register: backup_result
+  failed_when: backup_result.rc != 0
+
+# pre-upgrade checks
+- name: Run pre-upgrade check 1 - Check general configuration
+  command: gitlab-rake gitlab:check
+  register: pre-upgrade-check-1
+
+- name: Outpue pre-upgrade-check-1
+  debug:
+    var: pre-upgrade-check-1
+
+- name: Sleep to review the upgrade checks
+  ansible.builtin.pause:
+    seconds: 120
+
+- name: Run pre-upgrade check 2 - Can encrypted database values be decrypted
+  command: gitlab-rake gitlab:doctor:secrets
+
+# Pause the gitlab runners. # This will be a separate role

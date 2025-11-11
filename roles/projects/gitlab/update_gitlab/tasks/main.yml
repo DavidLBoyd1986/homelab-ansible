@@ -1,0 +1,22 @@
+
+# try update
+- name: Update GitLab to the latest version
+  command: gitlab-ctl upgrade
+  become: yes
+  become_user: root
+  register: update_result
+  failed_when: update_result.rc != 0
+
+# if update fails, check upgrade path
+- name: Check GitLab version
+  command: 
+  register: gitlab_status
+  when: update_result is failed
+
+# Exit maintenance mode
+- name: Disable GitLab maintenance mode
+  command: gitlab-rails runner 'ApplicationSetting.current.update!(maintenance_mode: false)'
+  become: yes
+  become_user: root
+  register: disable_maintenance_result
+  failed_when: disable_maintenance_result.rc != 0

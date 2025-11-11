@@ -1,0 +1,5 @@
+
+- name: Restart gitlab
+  command: gitlab-ctl Restart
+
+# Run Post checks

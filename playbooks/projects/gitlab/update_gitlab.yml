@@ -1,0 +1,9 @@
+- name: Update Gitlab Server
+  hosts: gitlab.homelab.com
+  remote_user: ansible
+  become: true
+  roles:
+    - { role: projects/gitlab/update_preparation_gitlab }
+    - { role: projects/gitlab/update_gitlab }
+    - { role: projects/gitlab/update_post_tasks_gitlab }
+
